@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>View Store Suggestions</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Georgia, serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+            font-size: 22px;
+        }
+
+        .refresh-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #bee29d;
+            color: black;
+            border: 2px solid black;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #a8d182;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #00873e;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .loading, .error {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .error {
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Submitted Suggestions</h2>
+        <button class="refresh-btn" id="refreshBtn">Refresh Data</button>
+        
+        <div class="table-responsive">
+            <div id="status" class="loading">Loading suggestions...</div>
+            <table id="dataTable" style="display: none;">
+                <thead>
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyjCKDdx3_7qRRe9Z1wJA-dYPRrKOsI-psyAyQYkI3a8u6HQt_JharRlemhn3S7YBm3cA/exec';
+        
+        const refreshBtn = document.getElementById('refreshBtn');
+        const statusDiv = document.getElementById('status');
+        const dataTable = document.getElementById('dataTable');
+        const tableHeader = document.getElementById('tableHeader');
+        const tableBody = document.getElementById('tableBody');
+
+        function fetchSheetData() {
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'loading';
+            statusDiv.textContent = 'Loading suggestions...';
+            dataTable.style.display = 'none';
+
+            fetch(WEB_APP_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        statusDiv.textContent = 'No suggestions found.';
+                        return;
+                    }
+
+                    // Clear previous table content
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    // First row is headers
+                    const headers = data[0];
+                    headers.forEach(headerText => {
+                        const th = document.createElement('th');
+                        th.textContent = headerText;
+                        tableHeader.appendChild(th);
+                    });
+
+                    // Remaining rows are data
+                    for (let i = 1; i < data.length; i++) {
+                        const rowData = data[i];
+                        const tr = document.createElement('tr');
+                        
+                        rowData.forEach((cellText, cellIndex) => {
+                            const td = document.createElement('td');
+                            
+                            // If it's the timestamp column (usually index 0) or contains date elements, strip the time
+                            if (cellText && (cellIndex === 0 || String(cellText).includes('GMT') || !isNaN(Date.parse(cellText)))) {
+                                const dateObj = new Date(cellText);
+                                if (!isNaN(dateObj.getTime())) {
+                                    // Format to show only the date portion (e.g., MM/DD/YYYY)
+                                    td.textContent = dateObj.toLocaleDateString();
+                                } else {
+                                    td.textContent = cellText;
+                                }
+                            } else {
+                                td.textContent = cellText;
+                            }
+                            
+                            tr.appendChild(td);
+                        });
+                        tableBody.appendChild(tr);
+                    }
+
+                    statusDiv.style.display = 'none';
+                    dataTable.style.display = 'table';
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    statusDiv.className = 'error';
+                    statusDiv.textContent = 'Failed to load suggestions. Check console or permissions.';
+                });
+        }
+
+        refreshBtn.addEventListener('click', fetchSheetData);
+
+        // Load data automatically when page opens
+        fetchSheetData();
+    </script>
+</body>
+</html>
