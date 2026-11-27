@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submitted Suggestions · 7-Eleven Gen. Yengco</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --bg: #f4f5f3;
+            --surface: #ffffff;
+            --ink: #17211b;
+            --muted: #6b7c73;
+            --line: #e1e6e2;
+            --accent: #00703c;
+            --accent-hover: #005c32;
+            --danger: #c8312b;
+            --shadow: 0 1px 2px rgba(23, 33, 27, 0.04), 0 12px 32px rgba(23, 33, 27, 0.06);
+            --brand-orange: #f58220;
+            --brand-green: #00873e;
+            --brand-red: #ee2a24;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px 16px;
+                    /* Background image + dark readable overlay */
+        background-color: #0b3d21;
+        background-image:
+            linear-gradient(140deg, rgba(3,42,22,.72), rgba(0,0,0,.62));
+        background-size: cover, cover;
+        background-position: center, center;
+        background-repeat: no-repeat, no-repeat;
+
+            color: var(--ink);
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+            font-size: 15px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        /* Brand stripe */
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--brand-orange) 0 33.33%, var(--brand-green) 33.33% 66.66%, var(--brand-red) 66.66% 100%);
+        }
+
+        /* --- Header & Filters --- */
+        .header-area {
+            padding: 32px 24px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .header-title h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+        .header-title p { margin: 0; font-size: 13px; color: var(--muted); }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* --- Date Picker Redesign --- */
+        .date-picker-container {
+            position: relative;
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+        }
+
+        .calendar-icon {
+            position: absolute;
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            color: var(--muted);
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .input-date {
+            width: 100%;
+            height: 44px;
+            padding: 0 16px 0 42px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--ink);
+            background: var(--surface);
+            outline: none;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .input-date:hover { border-color: #c0cdc5; }
+        .input-date:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 112, 60, 0.15);
+            background: #fff;
+        }
+        .date-picker-container:focus-within .calendar-icon { color: var(--accent); }
+
+        .input-date::-webkit-calendar-picker-indicator {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: auto; height: auto;
+            color: transparent; background: transparent;
+            cursor: pointer; opacity: 0;
+        }
+        .input-date:invalid::-webkit-datetime-edit { color: var(--muted); }
+
+        .btn {
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.15s ease;
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--ink);
+        }
+        .btn-outline:hover { background: var(--bg); }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* --- List Layout --- */
+        .list-area { padding: 0 24px; }
+
+        .feedback-item {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--line);
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback-item:last-child { border-bottom: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+        .item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 16px;
+        }
+
+        .user-info { display: flex; flex-direction: column; gap: 4px; }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ink);
+        }
+
+        .badge-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .rating-stars {
+            color: #f7b500;
+            font-size: 15px;
+            letter-spacing: 2px;
+        }
+
+        .category-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            background: #e8f8ee;
+            color: #0a5c30;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-delete:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+        .item-suggestion {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+
+        .item-meta {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* --- Status & Loader --- */
+        .status { padding: 40px 20px; text-align: center; color: var(--muted); }
+        .status.error { color: var(--danger); }
+        .spinner {
+            display: inline-block; width: 16px; height: 16px; margin-right: 8px;
+            border: 2px solid var(--line); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -3px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        #toast {
+            position: fixed; top: 24px; left: 50%; transform: translate(-50%, -16px);
+            padding: 13px 20px; background: #16241c; color: #fff; border-radius: 12px;
+            font-size: 13.5px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.3);
+            opacity: 0; visibility: hidden; transition: opacity .28s, transform .28s; z-index: 1000;
+        }
+        #toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+        #toast.success { background: #0a7a3b; }
+        #toast.error { background: #d63a33; }
+
+        /* --- NEW: Custom Delete Modal --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 33, 27, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(10px) scale(0.95);
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0) scale(1);
+        }
+        .modal-icon {
+            width: 56px;
+            height: 56px;
+            background: #fee2e2;
+            color: #dc2626;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 auto 16px;
+        }
+        .modal-content h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            color: var(--ink);
+        }
+        .modal-content p {
+            margin: 0 0 24px;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-actions .btn {
+            flex: 1;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+            border: none;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #b91c1c;
+        }
+        .btn-danger:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .btn { width: 100%; }
+            .header-area, .list-area { padding-left: 16px; padding-right: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <div class="header-area">
+            <div class="header-title">
+                <div >
+                    <h1 >GEN. YENGCO FEEDBACK DATA</h1>
+                    <p id="count" aria-live="polite">Loading...</p>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="date-picker-container">
+                    <svg class="calendar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <input type="date" id="dateFilter" class="input-date" aria-label="Filter by date visited">
+                </div>
+                <button class="btn btn-outline" id="showAllBtn" type="button">Show all</button>
+                <button class="btn btn-primary" id="refreshBtn" type="button">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px; margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="list-area">
+            <div id="status" class="status" role="status"></div>
+            <div id="feedbackList"></div>
+        </div>
+    </main>
+
+    <!-- Custom Delete Modal -->
+    <div id="deleteModal" class="modal-overlay" hidden>
+        <div class="modal-content">
+            <div class="modal-icon">!</div>
+            <h3>Delete Feedback?</h3>
+            <p>Are you sure you want to delete this feedback? This action cannot be undone and will remove the data permanently.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="cancelDeleteBtn" type="button">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn" type="button">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyd-h54FiTdrSArgt_A181RWcAZia0L2kvAYpt8pcoP_vmP84KcPD-AYke6EMROzLC-3Q/exec';
+
+    const refreshBtn  = document.getElementById('refreshBtn');
+    const showAllBtn  = document.getElementById('showAllBtn');
+    const dateFilter  = document.getElementById('dateFilter');
+    const statusDiv   = document.getElementById('status');
+    const countEl     = document.getElementById('count');
+    const listContainer = document.getElementById('feedbackList');
+    const toast       = document.getElementById('toast');
+
+    // Modal Elements
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    let pendingDelete = null; // Stores the row to be deleted
+
+    let allData = [];
+    let headers = [];
+    let colIndex = {};
+
+    function setStatus(message, type) {
+        statusDiv.className = 'status' + (type ? ' ' + type : '');
+        statusDiv.innerHTML = type === 'loading' ? '<span class="spinner"></span>' : '';
+        statusDiv.appendChild(document.createTextNode(message));
+        statusDiv.hidden = false;
+    }
+
+    function formatDate(value, isVisitDate = false) {
+        if (!value) return '—';
+        let d;
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            const [y, m, day] = value.split('-').map(Number);
+            d = new Date(y, m - 1, day);
+        } else {
+            d = new Date(value);
+        }
+        if (isNaN(d.getTime())) return String(value);
+
+        const dateStr = d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+        if (isVisitDate) return dateStr;
+        
+        const timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        return `${dateStr} at ${timeStr}`;
+    }
+
+    function renderStars(value) {
+        const n = Math.round(Number(value));
+        if (!Number.isFinite(n) || n < 1 || n > 5) return '';
+        return `<span class="rating-stars">${'★'.repeat(n)}${'☆'.repeat(5 - n)}</span>`;
+    }
+
+    let toastTimer;
+    function showToast(message, type = 'success') {
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.className = `show ${type}`;
+        toastTimer = setTimeout(() => { toast.className = ''; }, 3000);
+    }
+
+    function openDeleteModal(rowNumber, btnElement) {
+        pendingDelete = { rowNumber, btnElement };
+        deleteModal.hidden = false;
+        // Small delay to allow CSS transition to catch the hidden change
+        setTimeout(() => deleteModal.classList.add('show'), 10);
+    }
+
+    function closeDeleteModal() {
+        deleteModal.classList.remove('show');
+        setTimeout(() => {
+            deleteModal.hidden = true;
+            pendingDelete = null;
+        }, 200); // Matches CSS transition time
+    }
+
+    // Modal Button Events
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+
+    // Close when clicking outside the modal
+    deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) closeDeleteModal();
+    });
+
+    // Confirm Delete Action
+    confirmDeleteBtn.addEventListener('click', () => {
+        if (!pendingDelete) return;
+
+        const { rowNumber, btnElement } = pendingDelete;
+        
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.textContent = 'Deleting...';
+        btnElement.textContent = '...';
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'delete', rowNumber: rowNumber })
+        })
+        .then(() => {
+            showToast('Deleted successfully', 'success');
+            allData = allData.filter(item => item.rowNumber !== rowNumber);
+            applyFilter(dateFilter.value); 
+        })
+        .catch(err => {
+            showToast('Failed to delete', 'error');
+            btnElement.textContent = 'Delete';
+        })
+        .finally(() => {
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.textContent = 'Delete';
+            btnElement.disabled = false;
+            closeDeleteModal();
+        });
+    });
+
+    function renderList(dataToRender) {
+        listContainer.innerHTML = '';
+        
+        if (dataToRender.length === 0) {
+            setStatus('No suggestions found.');
+            countEl.textContent = '0 suggestions';
+            return;
+        }
+
+        dataToRender.forEach(item => {
+            const { rowNumber, row } = item;
+            
+            const name = (colIndex.name !== -1 && row[colIndex.name]) ? row[colIndex.name] : 'ANONYMOUS';
+            const suggestion = (colIndex.suggestion !== -1 && row[colIndex.suggestion]) ? row[colIndex.suggestion] : '';
+            const rating = (colIndex.rating !== -1 && row[colIndex.rating]) ? row[colIndex.rating] : null;
+            const category = (colIndex.category !== -1 && row[colIndex.category]) ? row[colIndex.category] : null;
+            const visitDate = (colIndex.visitDate !== -1 && row[colIndex.visitDate]) ? row[colIndex.visitDate] : null;
+            const timestamp = (colIndex.timestamp !== -1 && row[colIndex.timestamp]) ? row[colIndex.timestamp] : null;
+
+            const div = document.createElement('div');
+            div.className = 'feedback-item';
+            
+            let metaHtml = '';
+            if (visitDate) metaHtml += `<div>Visited ${formatDate(visitDate, true)}</div>`;
+            if (timestamp) metaHtml += `<div>Submitted ${formatDate(timestamp, false)}</div>`;
+
+            let badgesHtml = '';
+            const starsHtml = renderStars(rating);
+            if (starsHtml || category) {
+                badgesHtml = `<div class="badge-row">
+                    ${starsHtml}
+                    ${category ? `<span class="category-tag">${category}</span>` : ''}
+                </div>`;
+            }
+
+            div.innerHTML = `
+                <div class="item-top">
+                    <div class="user-info">
+                        <span class="user-name">${name}</span>
+                        ${badgesHtml}
+                    </div>
+                    <button class="btn-delete" type="button">Delete</button>
+                </div>
+                <div class="item-suggestion">${suggestion}</div>
+                <div class="item-meta">${metaHtml}</div>
+            `;
+
+            const delBtn = div.querySelector('.btn-delete');
+            delBtn.onclick = () => openDeleteModal(rowNumber, delBtn);
+
+            listContainer.appendChild(div);
+        });
+
+        statusDiv.hidden = true;
+        countEl.textContent = dataToRender.length + (dataToRender.length === 1 ? ' suggestion' : ' suggestions');
+    }
+
+    function applyFilter(filterValue) {
+        if (!filterValue) {
+            renderList(allData);
+            return;
+        }
+
+        const filtered = allData.filter(item => {
+            if (colIndex.visitDate === -1) return false;
+            const visitDateValue = item.row[colIndex.visitDate];
+            if (!visitDateValue) return false;
+
+            let d;
+            if (typeof visitDateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(visitDateValue)) {
+                return visitDateValue === filterValue;
+            } else {
+                d = new Date(visitDateValue);
+                if (isNaN(d.getTime())) return false;
+                const localDateStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                return localDateStr === filterValue;
+            }
+        });
+
+        renderList(filtered);
+    }
+
+    function fetchSheetData(manual = false) {
+        refreshBtn.disabled = true;
+        listContainer.innerHTML = '';
+        countEl.textContent = '';
+        setStatus('Loading suggestions…', 'loading');
+
+        fetch(WEB_APP_URL, { cache: 'no-store' })
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data) || data.length <= 1) {
+                    setStatus('No suggestions yet.');
+                    return;
+                }
+
+                headers = data[0].map(h => String(h || '').trim().toLowerCase());
+                
+                const isLegacy = headers.length <= 4;
+                
+                const getIdx = (keywords, fallback) => {
+                    const idx = headers.findIndex(h => h && keywords.some(k => h.includes(k)));
+                    return idx !== -1 ? idx : fallback;
+                };
+
+                colIndex = {
+                    timestamp:  getIdx(['timestamp', 'submitted', 'date'], 0),
+                    name:       isLegacy ? -1 : getIdx(['name', 'sender', 'user'], 1),
+                    visitDate:  isLegacy ? -1 : getIdx(['visit'], 2),
+                    rating:     getIdx(['rating', 'star', 'score'], isLegacy ? 2 : 3),
+                    category:   getIdx(['category', 'type', 'topic', 'tag'], isLegacy ? 3 : 4),
+                    suggestion: getIdx(['suggestion', 'feedback', 'message', 'comment'], isLegacy ? 1 : 5)
+                };
+
+                allData = [];
+                for (let r = 1; r < data.length; r++) {
+                    allData.push({
+                        rowNumber: r + 1,
+                        row: data[r]
+                    });
+                }
+
+                allData.reverse();
+                applyFilter(dateFilter.value);
+                
+                if (manual) showToast('Refreshed successfully', 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                setStatus('Couldn’t load data. Check your connection.', 'error');
+            })
+            .finally(() => {
+                refreshBtn.disabled = false;
+            });
+    }
+
+    refreshBtn.addEventListener('click', () => fetchSheetData(true));
+    dateFilter.addEventListener('change', (e) => applyFilter(e.target.value));
+    showAllBtn.addEventListener('click', () => {
+        dateFilter.value = '';
+        applyFilter('');
+    });
+
+    fetchSheetData(false);
+</script>
+</body>
+</html>
